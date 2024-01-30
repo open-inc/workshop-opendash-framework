@@ -1,0 +1,35 @@
+{       
+        auto_https off
+}
+{$OI_PUBLIC_URL} {
+    log {
+        level DEBUG
+    }
+
+    root * /wwwdata
+
+    reverse_proxy /parse parse:80
+    reverse_proxy /parse/* parse:80
+
+    reverse_proxy /user parsedashboard:4040
+    reverse_proxy /user/* parsedashboard:4040
+
+    encode gzip
+
+
+    @norewrite {
+        not {
+            path /parse
+            path /parse/*
+        }
+        file {
+            try_files {path} {path}/ /index.html?{query}
+              try_files {path} index.html
+
+        }
+    }
+
+    rewrite @norewrite {http.matchers.file.relative}
+    file_server
+
+}

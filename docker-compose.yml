@@ -1,0 +1,76 @@
+version: "3.5"
+services:
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "5"
+        max-size: "10m"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./www:/wwwdata
+    ports:
+      - 80:80
+      - 443:443
+    environment:
+      - OI_PUBLIC_URL=${OI_PUBLIC_URL}
+  parse:
+    depends_on:
+      - mongodb
+    image: openinc/parse-server-opendash:2
+    container_name: parse
+    restart: unless-stopped
+    environment:
+      - HOST=0.0.0.0
+      - PARSE_SERVER_APP_NAME=openinc
+      - PARSE_SERVER_APPLICATION_ID=${OI_PARSE_APPID}
+      - PARSE_SERVER_MASTER_KEY=${OI_PARSE_MASTERKEY}
+      - PARSE_SERVER_DATABASE_URI=mongodb://${OI_MONGO_USER}:${OI_MONGO_PASSWORD}@mongodb/parse?authSource=admin
+      - PARSE_PUBLIC_SERVER_URL=${OI_SSL}${OI_PUBLIC_URL}/parse
+      - PARSE_SERVER_CLOUD=./cloud/main.js
+      - PARSE_SERVER_OPENWARE=true
+      - PARSE_SERVER_OPENWARE_BASEURL=${OI_SSL}${OI_PUBLIC_URL}
+      - PARSE_SERVER_OPENWARE_JWT_SECRET=${OI_JWT_SECRET}
+      - PARSE_SERVER_OPENWARE_JWT_ISS=open.INC GmbH
+      - PARSE_SERVER_OPENWARE_JWT_ADMIN_EMAIL=stein@openinc.de
+      - OPENINC_PARSE_APP_URL=/
+      - OPENINC_PARSE_FEATURE_CORE=true
+      - OPENINC_PARSE_WEB_PUSH_ENABLED=false
+      - OPENINC_PARSE_CLOUDCODE_AUTOLOAD_DIR=/usr/src/app/cloud/custom
+    volumes:
+      - ./cc:/usr/src/app/cloud/custom
+  parsedashboard:
+    image: parseplatform/parse-dashboard:latest
+    container_name: parsedashboard
+    restart: unless-stopped
+    ports:
+      - 4040:4040
+    environment:
+      - HOST=0.0.0.0
+      - PORT=4040
+      - MOUNT_PATH=/
+      - PARSE_DASHBOARD_SERVER_URL=${OI_SSL}${OI_PUBLIC_URL}/parse
+      - PARSE_DASHBOARD_MASTER_KEY=${OI_PARSE_MASTERKEY}
+      - PARSE_DASHBOARD_APP_ID=${OI_PARSE_APPID}
+      - PARSE_DASHBOARD_APP_NAME=open.INC
+      - PARSE_DASHBOARD_USER_ID=aventum
+      - PARSE_DASHBOARD_USER_PASSWORD=open.passwort
+      - PARSE_DASHBOARD_ALLOW_INSECURE_HTTP=1
+  mongodb:
+    image: mongo:5
+    container_name: mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_DATA_DIR: /data/db
+      MONGO_LOG_DIR: /data/logs
+      MONGO_INITDB_ROOT_USERNAME: ${OI_MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${OI_MONGO_PASSWORD}
+    volumes:
+      - ./mongodb/db:/data/db
+      - ./mongodb/logs:/data/logs
+      - ./mongodb/varlogs:/var/log/mongodb
+    ports:
+      - 27017:27017
