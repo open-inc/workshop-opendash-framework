@@ -6,7 +6,7 @@ const {
 } = require("@openinc/parse-server-opendash");
 
 const init = async (name) => {
-  console.log("Sebbel lügt über " + name);
+  console.log("Init Cloud Code " + name);
   await beforeSaveHook("OD3_Share", async (request) => {
     console.log("OD3_Share beforeSaveHook");
     console.log(JSON.stringify(request.object));
