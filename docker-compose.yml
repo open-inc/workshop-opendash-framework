@@ -2,6 +2,7 @@ version: "3.5"
 services:
   caddy:
     image: caddy:2
+    platform: linux/amd64
     container_name: caddy
     restart: unless-stopped
     logging:
@@ -21,6 +22,7 @@ services:
     depends_on:
       - mongodb
     image: openinc/parse-server-opendash:2
+    platform: linux/amd64
     container_name: parse
     restart: unless-stopped
     environment:
@@ -44,6 +46,7 @@ services:
       - ./cc:/usr/src/app/cloud/custom
   parsedashboard:
     image: parseplatform/parse-dashboard:latest
+    platform: linux/amd64
     container_name: parsedashboard
     restart: unless-stopped
     ports:
@@ -60,7 +63,8 @@ services:
       - PARSE_DASHBOARD_USER_PASSWORD=open.passwort
       - PARSE_DASHBOARD_ALLOW_INSECURE_HTTP=1
   mongodb:
-    image: mongo:5
+    image: mongo:4.4
+    platform: linux/amd64
     container_name: mongodb
     restart: unless-stopped
     environment:
